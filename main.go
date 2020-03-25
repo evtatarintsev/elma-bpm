@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -26,17 +27,17 @@ func readUrls(urls chan string) {
 }
 
 
-func printResults(results chan Result)  {
+func printResults(w io.Writer, results chan Result)  {
 	totalCount := 0
 	for result := range results {
 		totalCount += result.count
 		if result.err != nil {
-			fmt.Printf("Error fetch %s: %s\n", result.url, result.err)
+			fmt.Fprintf(w,"Error fetch %s: %s\n", result.url, result.err)
 			continue
 		}
-		fmt.Printf("Count for %s: %d\n", result.url, result.count)
+		fmt.Fprintf(w, "Count for %s: %d\n", result.url, result.count)
 	}
-	fmt.Printf("Total %d\n", totalCount)
+	fmt.Fprintf(w, "Total %d\n", totalCount)
 }
 
 
@@ -88,5 +89,5 @@ func main() {
 	go readUrls(urls)
 	go fetchResults(urls, word, results, maxGoroutines)
 
-	printResults(results)
+	printResults(os.Stdout, results)
 }
