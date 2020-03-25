@@ -1,13 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"errors"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 )
+
 
 func TestPrintResults(t *testing.T)  {
 	// arrange
@@ -17,23 +17,18 @@ func TestPrintResults(t *testing.T)  {
 	results <- Result{"wrong url", 0, errors.New("some error")}
 	close(results)
 
+	var writer bytes.Buffer
 	const expectedOut = "Count for some url: 10\n" +
-						"Count for next url: 5\n" +
-						"Error fetch wrong url: some error\n" +
-						"Total 15\n"
+		"Count for next url: 5\n" +
+		"Error fetch wrong url: some error\n" +
+		"Total 15\n"
 
-	tmpfile, _ := ioutil.TempFile("", "example")
-	oldStdout := os.Stdout
-	os.Stdout = tmpfile
 
 	// act
-	printResults(results)
+	printResults(&writer, results)
 
 	// assert
-	os.Stdout.Seek(0, 0)
-	output, _ := ioutil.ReadAll(os.Stdout)
-	os.Stdout = oldStdout
-	if string(output) != expectedOut {
+	if writer.String() != expectedOut {
 		t.Error("Wrong output")
 	}
 }
